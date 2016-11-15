@@ -1,12 +1,13 @@
 ﻿function Start-ParallelWork {
     param (
         $ScriptBlock,
-        $Parameters
+        $Parameters,
+        $MaxConcurrentJobs = 10
     )
     $Jobs = @()
 
     foreach ($Parameter in $Parameters) {
-        while ($(Get-Job -State Running | where Id -In $Jobs.Id | Measure).count -ge 10) { Start-Sleep -Milliseconds 100 }
+        while ($(Get-Job -State Running | where Id -In $Jobs.Id | Measure).count -ge $MaxConcurrentJobs) { Start-Sleep -Milliseconds 100 }
         $Jobs += Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Parameter
     }
 
