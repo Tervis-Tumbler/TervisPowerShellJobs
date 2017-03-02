@@ -45,6 +45,7 @@ function Start-RSParallelWork {
     param (
         $ScriptBlock,
         $Parameters,
+        $OptionalParameters,
         $MaxConcurrentJobs = 10
     )
     $Jobs = @()
@@ -53,7 +54,7 @@ function Start-RSParallelWork {
         while ($(Get-RSJob -State Running | where Id -In $Jobs.Id | Measure).count -ge $MaxConcurrentJobs) { Start-Sleep -Milliseconds 100 }
         $Count += 1
         Write-Verbose "Starting job # $Count Running: $((Get-RSJob -State Running | Measure).count) Completed: $((Get-RSJob -State Completed | Measure).count)"
-        $Jobs += Start-RSJob -ScriptBlock $ScriptBlock -InputObject $Parameter
+        $Jobs += Start-RSJob -ScriptBlock $ScriptBlock -InputObject $Parameter,$OptionalParameters
     }
 
     while (
