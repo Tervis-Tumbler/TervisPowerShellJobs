@@ -1,6 +1,4 @@
-﻿#Requires -modules PoshRSJob
-
-function Install-TervisPowerShellJobs {
+﻿function Install-TervisPowerShellJobs {
     Install-Module -Scope CurrentUser PoshRSJob
 }
 
