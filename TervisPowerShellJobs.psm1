@@ -8,7 +8,8 @@ function Start-ParallelWork {
         $ScriptBlock,
         $Parameters,
         $OptionalParameters,
-        $MaxConcurrentJobs = 10
+        $MaxConcurrentJobs = 10,
+        [scriptblock]$InitializationScript
     )
     $Jobs = @()
     [Int]$Count = 0
@@ -16,7 +17,7 @@ function Start-ParallelWork {
         while ($(Get-Job -State Running | where Id -In $Jobs.Id | Measure).count -ge $MaxConcurrentJobs) { Start-Sleep -Milliseconds 100 }
         $Count += 1
         Write-Verbose "Starting job # $Count Running: $((Get-Job -State Running | Measure).count) Completed: $((Get-Job -State Completed | Measure).count)"
-        $Jobs += Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Parameter,$OptionalParameters
+        $Jobs += Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Parameter,$OptionalParameters -InitializationScript $InitializationScript
     }
 
     while (
