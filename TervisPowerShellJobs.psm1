@@ -19,7 +19,7 @@ function Start-ParallelWork {
                 Where-Object Id -In $Jobs.Id | 
                 Measure-Object | 
                 Select-Object -ExpandProperty Count
-            $Percent = $CompletedJobCount * 100 / $Total
+            $Percent = $($x = $CompletedJobCount * 100 / $Total; if ($x -gt 100) {return 100} else {return $x})
             $Status = "Jobs completed: $CompletedJobCount of $Total"
             Write-Progress -Activity "Process parallel jobs" -Status $Status -PercentComplete $Percent 
         }
