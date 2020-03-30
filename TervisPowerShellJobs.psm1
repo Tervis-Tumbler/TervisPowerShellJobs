@@ -13,16 +13,19 @@ function Start-ParallelWork {
         [switch]$ShowProgress
     )
     $Total = $Parameters | Measure-Object | Select-Object -ExpandProperty Count
-    function Show-ParallelProgress {
-        if ($ShowProgress) {
-            $CompletedJobCount = Get-Job -State Completed | 
-                Where-Object Id -In $Jobs.Id | 
-                Measure-Object | 
-                Select-Object -ExpandProperty Count
-            $Percent = $($x = $CompletedJobCount * 100 / $Total; if ($x -gt 100) {return 100} else {return $x})
-            $Status = "Jobs completed: $CompletedJobCount of $Total"
-            Write-Progress -Activity "Process parallel jobs" -Status $Status -PercentComplete $Percent 
-        }
+    function Get-ParallelProgress {
+        $CompletedJobCount = Get-Job -State Completed | 
+            Where-Object Id -In $Jobs.Id | 
+            Measure-Object | 
+            Select-Object -ExpandProperty Count
+        $Percent = $CompletedJobCount * 100 / $Total
+        if ($Percent -gt 100) {$Percent = 100}
+        $Status = "Jobs completed: $CompletedJobCount of $Total"
+        return @{
+            Activity = "Process parallel jobs"
+            Status = $Status
+            PercentComplete = $Percent
+        } 
     }
     $Jobs = @()
     [Int]$Count = 0
@@ -31,7 +34,7 @@ function Start-ParallelWork {
         $Count += 1
         Write-Verbose "Starting job # $Count Running: $((Get-Job -State Running | Measure).count) Completed: $((Get-Job -State Completed | Measure).count)"
         $Jobs += Start-Job -ScriptBlock $ScriptBlock -ArgumentList $Parameter,$OptionalParameters -InitializationScript $InitializationScript
-        Show-ParallelProgress
+        if ($ShowProgress) {$ParallelProgress = Get-ParallelProgress; Write-Progress @ParallelProgress}
     }
 
     while (
@@ -40,7 +43,7 @@ function Start-ParallelWork {
     ) {
         Write-Verbose "Sleeping for 100 milliseconds"
         Start-Sleep -Milliseconds 100 
-        Show-ParallelProgress
+        if ($ShowProgress) {$ParallelProgress = Get-ParallelProgress; Write-Progress @ParallelProgress}
     }
     
     $Results = Get-Job -HasMoreData $true | 
